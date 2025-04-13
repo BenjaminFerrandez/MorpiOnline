@@ -19,13 +19,11 @@ class TicTacToeClient:
         self.opponent = None
         self.board = [" " for _ in range(9)]
 
-        # Interface principale
         self.root = tk.Tk()
         self.root.title("Tic Tac Toe - Client")
         self.root.geometry("800x600")
         self.root.resizable(False, False)
 
-        # Frame de connexion
         self.login_frame = tk.Frame(self.root)
         self.login_frame.pack(pady=50)
 
@@ -46,10 +44,8 @@ class TicTacToeClient:
         self.connect_button = tk.Button(self.login_frame, text="Se connecter", command=self.connect)
         self.connect_button.grid(row=3, column=0, columnspan=2, pady=10)
 
-        # Frame principal (caché au début)
         self.main_frame = tk.Frame(self.root)
 
-        # Frame de file d'attente
         self.queue_frame = tk.Frame(self.main_frame)
         self.queue_frame.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.BOTH, expand=True)
 
@@ -68,14 +64,12 @@ class TicTacToeClient:
         self.leave_queue_button = tk.Button(self.queue_frame, text="Quitter la file", command=self.leave_queue, state=tk.DISABLED)
         self.leave_queue_button.pack(pady=5)
 
-        # Frame de jeu
         self.game_frame = tk.Frame(self.main_frame)
         self.game_frame.pack(side=tk.RIGHT, padx=10, pady=10, fill=tk.BOTH, expand=True)
 
         self.game_info = tk.Label(self.game_frame, text="En attente d'un match...", font=("Arial", 12))
         self.game_info.pack(pady=5)
 
-        # Plateau de jeu
         self.board_frame = tk.Frame(self.game_frame)
         self.board_frame.pack(pady=10)
 
@@ -87,10 +81,8 @@ class TicTacToeClient:
                 button.grid(row=i, column=j, padx=5, pady=5)
                 self.buttons.append(button)
 
-        # Désactiver le plateau au début
         self.disable_board()
 
-        # Zone de chat
         tk.Label(self.game_frame, text="Chat", font=("Arial", 12)).pack(pady=5)
 
         self.chat_display = scrolledtext.ScrolledText(self.game_frame, width=40, height=10)
@@ -106,7 +98,6 @@ class TicTacToeClient:
         self.send_button = tk.Button(self.chat_frame, text="Envoyer", command=self.send_chat)
         self.send_button.pack(side=tk.RIGHT, padx=5)
 
-        # Statistiques
         self.stats_frame = tk.Frame(self.game_frame)
         self.stats_frame.pack(pady=10, fill=tk.X)
 
@@ -116,7 +107,6 @@ class TicTacToeClient:
         self.refresh_stats_button = tk.Button(self.stats_frame, text="Rafraîchir stats", command=self.get_stats)
         self.refresh_stats_button.pack(pady=5)
 
-        # Gérer la fermeture de la fenêtre
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def start(self):
@@ -139,23 +129,19 @@ class TicTacToeClient:
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.client_socket.connect((self.host, self.port))
 
-            # Envoyer le nom d'utilisateur
             login_message = {
                 "action": "login",
                 "username": self.username
             }
             self.client_socket.send(json.dumps(login_message).encode('utf-8'))
 
-            # Démarrer le thread d'écoute
             self.listen_thread = threading.Thread(target=self.listen_for_messages)
             self.listen_thread.daemon = True
             self.listen_thread.start()
 
-            # Masquer le frame de connexion et afficher le frame principal
             self.login_frame.pack_forget()
             self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-            # Demander les statistiques
             self.get_stats()
 
         except Exception as e:
@@ -206,7 +192,6 @@ class TicTacToeClient:
                         self.symbol = message.get("symbol")
                         self.my_turn = message.get("your_turn")
 
-                        # Mettre à jour les informations
                         self.game_info.config(text=f"Match contre {self.opponent} - Vous êtes {self.symbol}")
 
                         if self.my_turn:
@@ -214,7 +199,6 @@ class TicTacToeClient:
                         else:
                             self.disable_board()
 
-                        # Effacer le chat
                         self.chat_display.config(state=tk.NORMAL)
                         self.chat_display.delete(1.0, tk.END)
                         self.chat_display.config(state=tk.DISABLED)
@@ -224,7 +208,6 @@ class TicTacToeClient:
                         board = game_state.get("board", [" " for _ in range(9)])
                         self.my_turn = game_state.get("current_turn") == self.username
 
-                        # Mettre à jour le plateau
                         self.board = board
                         for i in range(9):
                             self.buttons[i].config(text=board[i])
@@ -244,12 +227,10 @@ class TicTacToeClient:
                         self.game_info.config(text=game_message)
                         messagebox.showinfo("Fin de partie", game_message)
 
-                        # Réinitialiser l'état
                         self.in_game = False
                         self.join_queue_button.config(state=tk.NORMAL)
                         self.disable_board()
 
-                        # Mettre à jour les statistiques
                         self.get_stats()
 
                     elif action == "chat_message":
@@ -319,7 +300,6 @@ class TicTacToeClient:
         }
         self.client_socket.send(json.dumps(move_message).encode('utf-8'))
 
-        # Désactiver le plateau en attendant la réponse du serveur
         self.disable_board()
 
     def send_chat(self):
@@ -337,14 +317,12 @@ class TicTacToeClient:
         }
         self.client_socket.send(json.dumps(chat_message).encode('utf-8'))
 
-        # Ajouter le message au chat
         time_str = datetime.now().strftime("%H:%M:%S")
         self.chat_display.config(state=tk.NORMAL)
         self.chat_display.insert(tk.END, f"[{time_str}] Vous: {message}\n")
         self.chat_display.see(tk.END)
         self.chat_display.config(state=tk.DISABLED)
 
-        # Effacer l'entrée
         self.chat_entry.delete(0, tk.END)
 
     def get_stats(self):

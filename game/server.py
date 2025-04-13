@@ -36,7 +36,6 @@ class Game:
         self.board[position] = symbol
         self.turns_count += 1
 
-        # Vérifier s'il y a un gagnant
         winner_symbol = self.check_winner()
         if winner_symbol:
             self.winner = self.player1 if winner_symbol == "X" else self.player2
@@ -44,7 +43,6 @@ class Game:
         elif self.turns_count == 9:
             self.finished = True
 
-        # Passer au joueur suivant
         self.current_turn = self.player2 if player == self.player1 else self.player1
         return True
 
@@ -54,12 +52,10 @@ class Game:
             if self.board[i] != " " and self.board[i] == self.board[i+1] == self.board[i+2]:
                 return self.board[i]
 
-        # Vérifier les colonnes
         for i in range(3):
             if self.board[i] != " " and self.board[i] == self.board[i+3] == self.board[i+6]:
                 return self.board[i]
 
-        # Vérifier les diagonales
         if self.board[0] != " " and self.board[0] == self.board[4] == self.board[8]:
             return self.board[0]
         if self.board[2] != " " and self.board[2] == self.board[4] == self.board[6]:
@@ -174,7 +170,6 @@ class Server:
                             "queue_length": len(self.queue),
                             "join_time": player.join_time.strftime("%H:%M:%S")
                         }
-                        # Informer les autres joueurs dans la file d'attente
                         self.broadcast_queue_update()
 
                     player.client_socket.send(json.dumps(response).encode('utf-8'))
@@ -183,7 +178,6 @@ class Server:
                     if player in self.queue:
                         self.queue.remove(player)
                         response = {"action": "left_queue"}
-                        # Informer les autres joueurs dans la file d'attente
                         self.broadcast_queue_update()
                     else:
                         response = {"action": "error", "message": "Not in queue"}
@@ -206,7 +200,6 @@ class Server:
                         else:
                             success = game.make_move(player, position)
                             if success:
-                                # Informer les deux joueurs de l'état du jeu
                                 game_state = game.get_state()
                                 game_update = {
                                     "action": "game_update",
@@ -215,12 +208,10 @@ class Server:
                                 game.player1.client_socket.send(json.dumps(game_update).encode('utf-8'))
                                 game.player2.client_socket.send(json.dumps(game_update).encode('utf-8'))
 
-                                # Si le jeu est terminé, mettre à jour la base de données
                                 if game.finished:
                                     winner_id = game.winner.id if game.winner else None
                                     self.db.update_game_winner(game.game_id, winner_id, game.turns_count)
 
-                                    # Informer les joueurs que le match est terminé
                                     end_game = {
                                         "action": "game_over",
                                         "winner": game.winner.username if game.winner else None,
@@ -229,11 +220,9 @@ class Server:
                                     game.player1.client_socket.send(json.dumps(end_game).encode('utf-8'))
                                     game.player2.client_socket.send(json.dumps(end_game).encode('utf-8'))
 
-                                    # Libérer les joueurs
                                     game.player1.in_game = False
                                     game.player2.in_game = False
 
-                                    # Supprimer le jeu de la liste des jeux actifs
                                     del self.active_games[game.game_id]
 
                                 response = {"action": "move_success"}
@@ -275,7 +264,6 @@ class Server:
                     stats = self.db.get_player_stats(player.id)
                     if stats:
                         total_games, wins = stats
-                        # S'assurer que les deux valeurs sont des entiers valides
                         total_games = int(total_games) if total_games is not None else 0
                         wins = int(wins) if wins is not None else 0
                         losses = total_games - wins
@@ -305,23 +293,18 @@ class Server:
     def check_queue(self):
         while True:
             try:
-                # Vérifier s'il y a assez de joueurs pour commencer un match
                 if len(self.queue) >= 2:
                     player1 = self.queue.pop(0)
                     player2 = self.queue.pop(0)
 
-                    # Marquer les joueurs comme étant dans un jeu
                     player1.in_game = True
                     player2.in_game = True
 
-                    # Créer un jeu dans la base de données
                     game_id = self.db.create_game(player1.id, player2.id)
 
-                    # Créer un objet Game
                     game = Game(player1, player2, game_id)
                     self.active_games[game_id] = game
 
-                    # Informer les joueurs que le match commence
                     game_start = {
                         "action": "game_start",
                         "opponent": player2.username,
@@ -338,10 +321,8 @@ class Server:
                     }
                     player2.client_socket.send(json.dumps(game_start).encode('utf-8'))
 
-                    # Mettre à jour la file d'attente
                     self.broadcast_queue_update()
 
-                # Attendre un peu avant de vérifier à nouveau
                 time.sleep(1)
             except Exception as e:
                 print(f"Error in queue check: {str(e)}")

@@ -1,5 +1,4 @@
 import mysql.connector
-from datetime import datetime
 
 class Database:
     def __init__(self):
@@ -15,7 +14,6 @@ class Database:
         self.cursor.close()
         self.connection.close()
 
-    # Gestion des joueurs
     def add_player(self, username):
         query = "INSERT INTO players (username) VALUES (%s)"
         self.cursor.execute(query, (username,))
@@ -37,7 +35,6 @@ class Database:
         self.cursor.execute(query, (new_elo, player_id))
         self.connection.commit()
 
-    # Gestion des parties
     def create_game(self, player1_id, player2_id):
         query = "INSERT INTO games (player1_id, player2_id) VALUES (%s, %s)"
         self.cursor.execute(query, (player1_id, player2_id))
@@ -60,7 +57,6 @@ class Database:
         result = self.cursor.fetchone()
         if result:
             total_games, wins = result
-            # Assurer que wins n'est pas None (peut arriver si aucun match gagné)
             wins = wins if wins is not None else 0
             return (total_games, wins)
         return (0, 0)
