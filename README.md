@@ -3,11 +3,12 @@ Projet fil rouge d'Ynov Montpellier Campus.\
 Benjamin FERRANDEZ \
 Thomas Nebra
 ## Installation
-1. Clone le repo sur un poste.
+1. Clone le repo sur un poste de travaille (avoir au préalable python 3.13+) .
 2. Importez la base de données morpionline.sql dans une base de données mysql.
 3. Installez les dépendances avec la commande suivante :
 ```bash
 pip install tkinter
+pip install mysql-connector-python
 ```
 4. Lancez le serveur avec la commande suivante :
 ```bash
